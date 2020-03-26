@@ -1,0 +1,32 @@
+{
+  "name": "kodi-plex-sync-npm",
+  "version": "0.0.1",
+  "description": "Sync watched status between media centers",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darkcody/kodi-plex-sync.git"
+  },
+  "keywords": [
+    "kodi",
+    "plex",
+    "sync",
+    "xbmc",
+    "trakt"
+  ],
+  "author": "darkcody",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darkcody/kodi-plex-sync/issues"
+  },
+  "homepage": "https://github.com/darkcody/kodi-plex-sync#readme",
+  "dependencies": {
+    "esm": "^3.2.25",
+    "kodi": "git://github.com/tillbaks/node-kodi.git#master",
+    "plex-api": "^5.3.1",
+    "plex-api-pinauth": "^0.1.0"
+  }
+}
