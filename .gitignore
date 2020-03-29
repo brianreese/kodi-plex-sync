@@ -88,3 +88,8 @@ atlassian-ide-plugin.xml
 .idea/replstate.xml
 
 # End of https://www.gitignore.io/api/node,macos,phpstorm
+
+# User configuration
+config/
+reports/
+

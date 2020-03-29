@@ -14,6 +14,6 @@ export default class MovieItem extends MediaItemBase {
   }
 
   _getCompoundMatchProps() {
-    return [['title', 'year']];
+    return [['title']];
   }
 }

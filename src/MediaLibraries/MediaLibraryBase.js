@@ -3,23 +3,59 @@
  * Base class for media library client implementations.
  */
 import events from 'events';
+import prompt from 'prompt';
+import logger from 'rc_cli_util';
+import Registry from './Registry';
 
 export default class MediaLibraryBase {
 
-  constructor() {
+  constructor(config = false) {
+    this.name = Registry.getLibraries()[this._getTypeId()];
+    this.config = config;
     this.ready = false;
+    this.error = false;
     this.emitter = new events.EventEmitter();
-    this._connect().then(() => {
+    this._configure().then( user_config => {
+      this.user_config = user_config;
+      logger.status(`Attempting to connect to ${this.name}.`);
+      return this._connect();
+    }).then(() => {
+      logger.status(`Fetching media from ${this.name}.`);
       return this._getMedia();
     }).then(media => {
       this.media = media;
       this.ready = true;
       this.emitter.emit('ready');
     }).catch(err => {
-      console.log(err);
+      logger.error(err);
+      this.ready = false;
+      this.error = true;
+      this.emitter.emit('error');
     }).finally(() => {
       this._disconnect();
     });
+  }
+
+  async _configure() {
+    const schema = this._getConfigurationSchema();
+    if (!schema) return;
+
+    return new Promise((resolve, reject) => {
+      prompt.override = this.config || {};
+      prompt.start();
+      prompt.get(schema, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    })
+  }
+
+  _getTypeId() {
+    throw new Error(`Classes extending ${MediaLibraryBase.constructor} must implement getTypeId().`);
+  }
+
+  _getConfigurationSchema() {
+    return false;
   }
 
   /**
@@ -58,6 +94,10 @@ export default class MediaLibraryBase {
    */
   _getMedia() {
     throw new Error(`Classes extending ${MediaLibraryBase.constructor} must implement getMedia().`);
+  }
+
+  getMediaCount() {
+    return this.getAllMedia().length;
   }
 
   /**
@@ -153,9 +193,18 @@ export default class MediaLibraryBase {
       }
 
       this.emitter.on('ready', () => {
+        logger.success(`Connected to ${this.name}.`)
         resolve(true);
       });
+
+      this.emitter.on('error', () => {
+        reject(`Unable to connect to ${this.name}.`);
+      })
     });
+  }
+
+  getName() {
+    return this.name;
   }
 
 }

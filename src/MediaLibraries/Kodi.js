@@ -2,6 +2,7 @@ import MediaLibraryBase from './MediaLibraryBase';
 import EpisodeItem from '../MediaItems/EpisodeItem';
 import MovieItem from '../MediaItems/MovieItem';
 import Api from 'kodi';
+import logger from 'rc_cli_util';
 
 const commonFields = [
   'title',
@@ -20,7 +21,28 @@ export const KodiEpisodeFields = [...commonFields].concat([
   'showtitle',
   ]);
 
-export default class Kodi extends MediaLibraryBase {
+export class KodiLibrary extends MediaLibraryBase {
+
+  _getTypeId() {
+    return 'kodi';
+  }
+
+  _getConfigurationSchema() {
+    return {
+      properties: {
+        hostname: {
+          description: "The hostname of the kodi client you wish to use, or an IP address.",
+          default: "localhost",
+          required: true,
+        },
+        port: {
+          description: "The port of the kodi api.",
+          default: "9090",
+          required: true,
+        },
+      }
+    };
+  }
 
   /**
    *
@@ -32,8 +54,8 @@ export default class Kodi extends MediaLibraryBase {
     const PromisedApi = new Promise((resolve, reject) => {
       Api.connect({
         // @TODO: Get these details from config file or cli prompt?
-        host: "192.168.1.100",
-        port: 9090,
+        host: this.user_config.hostname,
+        port: this.user_config.port,
         reconnect: false,
         reconnectSleep: 3000,
         connectionTimeout: 10000,
@@ -41,7 +63,6 @@ export default class Kodi extends MediaLibraryBase {
       });
 
       Api.on('connect', () => {
-        console.log('api connected');
         resolve(true);
       });
 

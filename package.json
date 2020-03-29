@@ -4,7 +4,9 @@
   "description": "Sync watched status between media centers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node -r esm index.js",
+    "debug": "node -r esm --inspect-brk index.js",
+    "styleguide": "node -r esm style.js"
   },
   "repository": {
     "type": "git",
@@ -24,9 +26,19 @@
   },
   "homepage": "https://github.com/darkcody/kodi-plex-sync#readme",
   "dependencies": {
+    "app-root-path": "^3.0.0",
+    "ascii-art": "^2.5.0",
+    "ascii-art-image": "^1.2.2",
+    "canvas": "^2.6.1",
+    "chalk": "^3.0.0",
+    "cli-format": "^3.0.9",
     "esm": "^3.2.25",
     "kodi": "git://github.com/tillbaks/node-kodi.git#master",
+    "lodash": "^4.17.15",
     "plex-api": "^5.3.1",
-    "plex-api-pinauth": "^0.1.0"
+    "plex-api-pinauth": "^0.1.0",
+    "prompt": "git://github.com/flatiron/prompt.git#8d5495c84c3f433b8f26ea2798f8ba68c3656459",
+    "rc_cli_util": "git@github.com:darkcody/rc_cli_util.git#0.0.8",
+    "yaml": "^1.8.3"
   }
 }

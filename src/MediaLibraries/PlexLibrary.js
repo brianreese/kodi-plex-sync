@@ -2,39 +2,74 @@ import MediaLibraryBase from './MediaLibraryBase';
 import EpisodeItem from '../MediaItems/EpisodeItem';
 import MovieItem from '../MediaItems/MovieItem';
 import PlexAPI from 'plex-api';
-import PlexPinAuth from 'plex-api-pinauth';
-import UserPrompt from '../Utils/UserPrompt';
-
-const plexPinAuth = PlexPinAuth();
+import prompt from 'prompt';
 
 export class PlexLibrary extends MediaLibraryBase {
 
-  _connect_pin() {
-    // @TODO: get connection details from config / cli...
-    this.client = new PlexAPI({
-      hostname: '192.168.1.100',
-      authenticator: plexPinAuth,
-    });
+  _getTypeId() {
+    return 'plex';
+  }
 
-    return plexPinAuth.getNewPin().then(pinObj => {
-      return UserPrompt(`Visit https://plex.tv/pin and enter code: "${pinObj.code}". Hit enter when you have done so.`).then(() => pinObj);
-    }).then(pinObj => {
-      return new Promise((resolve, reject) => {
-        plexPinAuth.checkPinForAuth(pinObj, (err, st) => {
-          if (err) return reject(err);
-          resolve(st);
-        })
-      });
-    })
+  _getConfigurationSchema() {
+    return {
+      properties: {
+        hostname: {
+          description: "The hostname of the Plex server you wish to use, or an IP address.",
+          default: "localhost",
+          required: true,
+          type: 'string',
+        },
+        username: {
+          description: "The primary username for the Plex server.",
+          required: true,
+          type: 'string',
+        },
+        password: {
+          description: "The primary account password.",
+          hidden: true,
+          replace: '*',
+          required: true,
+          type: 'string',
+        },
+        include_managed_user_creds: {
+          description: "Do you want to migrate to a manged user instead of the primary plex user?",
+          type: 'boolean',
+        },
+        managed_username: {
+          description: "The managed user username.",
+          default: "",
+          required: true,
+          type: 'string',
+          ask: () => prompt.history('include_managed_user_creds').value,
+        },
+        managed_pin: {
+          description: "The managed user pin. Leave blank if the manged user does not require a pin.",
+          required: false,
+          default: "",
+          hidden: false,
+          replace: '*',
+          // type: 'string',
+          pattern: /^(\d{4})?$/,
+          ask: () => prompt.history('include_managed_user_creds').value,
+        },
+      }
+    }
   }
 
   _connect() {
-    // @TODO: get connection details from config / cli...
-    this.client = new PlexAPI({
-      hostname: '192.168.1.100',
+    const ApiConfig = {
+      hostname: this.user_config.hostname,
       username: 'brian.reese@gmail.com',
       password: 'Rumple125!',
-    });
+    };
+    if (this.user_config.include_managed_user_creds) {
+      ApiConfig.managedUser = {
+        name: this.user_config.managed_username,
+        pin: this.user_config.managed_pin,
+      }
+    }
+
+    this.client = new PlexAPI(ApiConfig);
 
     return Promise.resolve(true);
   }
@@ -76,8 +111,10 @@ export class PlexLibrary extends MediaLibraryBase {
     );
   }
 
-  _queryUri(uri) {
-    return this.client.query(uri);
+  async _queryUri(uri) {
+    const res = this.client.query(uri);
+    // console.log(res);
+    return res;
   }
 
   _querySection(id) {
@@ -122,17 +159,21 @@ export class PlexLibrary extends MediaLibraryBase {
 
   }
 
-  _setWatched(item) {
-    this.getMatchingMediaItem(item).forEach(matched => {
-      if (matched.playcount >= 1) {
-        return Promise.resolve();
-      }
+  async _setWatched(item) {
+    const matches = this.getMatchingMediaItem(item);
+    const promises = matches.map(async matched => {
+      // if (matched.playcount <= 1) {
 
-      return this._queryUri(`/:/scrobble?identifier=com.plexapp.plugins.library&key=${matched.id}`);
+        const promise = this._queryUri(`/:/scrobble?identifier=com.plexapp.plugins.library&key=${matched.id}`);
+        // debugger;
+        return promise;
+      // }
+      // return;
     });
+    await Promise.all(promises);
   }
 
-  _setUnatched(item) {
+  async _setUnatched(item) {
     this.getMatchingMediaItem(item).forEach(matched => {
       if (!matched.playcount) {
         return Promise.resolve();
@@ -141,6 +182,5 @@ export class PlexLibrary extends MediaLibraryBase {
       return this._queryUri(`/:/unscrobble?identifier=com.plexapp.plugins.library&key=${matched.id}`);
     });
   }
-
 
 }

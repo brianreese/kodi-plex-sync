@@ -1,0 +1,15 @@
+# Example configuration file for kodi-plex-xync
+# To use, copy example.config.yml -> config.yml and configure to your liking!
+servers:
+  source:
+    type: kodi
+    hostname: localhost
+    port: 9090
+  dest:
+    type: plex
+    hostname: 192.168.1.123
+    username: test@example.com
+    password: pass_goes_here
+    # If migrating to a manged user, enter UN (and optional PW) here.
+    managed_username: ~
+    managed_pin: ~
