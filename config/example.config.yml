@@ -1,5 +1,6 @@
-# Example configuration file for kodi-plex-xync
-# To use, copy example.config.yml -> config.yml and configure to your liking!
+# Example configuration file for kodi-plex sync. example.config.yml will be
+# ignored. To use, copy this file as a new config.yml file and configure to your
+# liking!
 servers:
   source:
     type: kodi
@@ -10,6 +11,6 @@ servers:
     hostname: 192.168.1.123
     username: test@example.com
     password: pass_goes_here
-    # If migrating to a manged user, enter UN (and optional PW) here.
-    managed_username: ~
-    managed_pin: ~
+    # If using a manged user, uncomment and enter managed UN (and optional PW).
+    #managed_username: ~
+    #managed_pin: ~

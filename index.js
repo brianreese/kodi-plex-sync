@@ -21,6 +21,7 @@ import logger from 'rc_cli_util';
     logger.message('done');
   } catch (err) {
     logger.makeSpace();
+    logger.error(err);
     logger.error(err.stack);
     logger.message('Looks like something went wrong. Feel free to try again!', 'h1');
   }

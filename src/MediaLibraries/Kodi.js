@@ -1,21 +1,23 @@
 import MediaLibraryBase from './MediaLibraryBase';
-import EpisodeItem from '../MediaItems/EpisodeItem';
-import MovieItem from '../MediaItems/MovieItem';
+import EpisodeItem, { MEDIA_TYPE_EPISODE } from '../MediaItems/EpisodeItem';
+import MovieItem, { MEDIA_TYPE_MOVIE } from '../MediaItems/MovieItem';
 import Api from 'kodi';
-import logger from 'rc_cli_util';
 
 const commonFields = [
   'title',
   'file',
   'playcount',
   'lastplayed',
+  // 'uniqueid'
 ];
 
 export const KodiMovieFields = [...commonFields].concat([
-  'year'
+  // 'movieid',
+  'year',
 ]);
 
 export const KodiEpisodeFields = [...commonFields].concat([
+  // 'episodeid',
   'episode',
   'season',
   'showtitle',
@@ -97,6 +99,41 @@ export class KodiLibrary extends MediaLibraryBase {
       });
 
     });
+  }
+
+  async _sendWatched(item) {
+    if (!item.playcount) {
+      await this._sendPlaycount(item, 1);
+    }
+  }
+
+  async _sendUnwatched(item) {
+    if (item.playcount) {
+      await this._sendPlaycount(item, 0);
+    }
+  }
+
+  async _sendPlaycount(item, playcount) {
+    let endpoint;
+    let params = { playcount };
+    switch (item.type) {
+      case MEDIA_TYPE_MOVIE:
+        endpoint = 'VideoLibrary.SetMovieDetails';
+        params.movieid = item.movieid;
+        break;
+      case MEDIA_TYPE_EPISODE:
+        endpoint = 'VideoLibrary.SetEpisodeDetails';
+        params.episodeid = item.episodeid;
+        break;
+      default:
+        throw new Error(`Invalid media type ${item.type}.`);
+        break;
+    }
+    try {
+      await Api.send(endpoint, params);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
 }

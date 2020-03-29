@@ -63,7 +63,7 @@ export default class MediaItemBase {
 
   matchMediaItem(item) {
     if (!item instanceof MediaItemBase) return false;
-    if (!(item.getType() === this.getType() )) return false;
+    if (!(item.type === this.type )) return false;
 
     let match = false;
 

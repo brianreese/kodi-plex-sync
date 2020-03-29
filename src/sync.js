@@ -2,9 +2,10 @@ import prompt from 'prompt';
 import _ from 'lodash';
 import ConfigStore from './Utils/ConfigStore';
 import Registry from './MediaLibraries/Registry';
-import logger, { ProgressBar } from 'rc_cli_util';
+import logger, { ProgressBarCount } from 'rc_cli_util';
 import fs from 'fs';
 import appRoot from 'app-root-path';
+import PromisePool from '@supercharge/promise-pool';
 
 const configStore = new ConfigStore();
 const configDir = `${appRoot}/config`;
@@ -54,6 +55,14 @@ async function configure() {
     active_config.dest_lib_type = dest_lib_type;
   }
 
+  // if (source_lib_type === 'plex') {
+  //   active_config.servers.source.include_managed_user_creds = false;
+  // }
+  //
+  // if (dest_lib_type === 'plex') {
+  //   active_config.servers.dest.include_managed_user_creds = false;
+  // }
+
   if (_.get(active_config, 'servers.source.managed_username')) {
     active_config.servers.source.include_managed_user_creds = true;
   }
@@ -83,22 +92,34 @@ async function sync() {
   const bidirectional = false;
   const syncUnwatched = false;
 
-  const is_watched_only = syncUnwatched && !bidirectional;
-  const media_source = is_watched_only ?
+  const is_all_media = syncUnwatched && !bidirectional;
+  const media_source = is_all_media ?
     libraryInstances.source.getAllMedia() :
     libraryInstances.source.getWatchedMedia()
   ;
 
-  logger.message(`Syncing ${is_watched_only ? 'watched' : 'all'} media from source to destination.`, 'h3');
+  logger.message(`Syncing ${is_all_media ? 'all' : 'watched'} media from source to destination.`, 'h3');
 
-  const bar1 = new ProgressBar(media_source.length);
+  // Debug start
+  const src_total = libraryInstances.source.getAllMedia().length;
+  const src_watched = libraryInstances.source.getWatchedMedia().length;
+  const dest_total = libraryInstances.dest.getAllMedia().length;
+  const dest_watched = libraryInstances.dest.getWatchedMedia().length;
+  logger.success(`Source library contains ${src_total} items, ${src_watched} watched.`);
+  logger.success(`Dest library contains ${dest_total} items, ${dest_watched} watched.`);
+  debugger;
+  await logger.promptYN('Proceed?');
+  // Debug end;
+
+  const bar1 = new ProgressBarCount(media_source.length);
   bar1.start();
 
-  await asyncForEach(media_source, async media_item => {
-    await libraryInstances.dest._setWatched(media_item);
-    bar1.increment();
-    return media_item;
-  });
+  const pool = PromisePool.for(media_source).withConcurrency(5);
+  const { results, errors } = await pool.process(async media_item => {
+      await libraryInstances.dest._setWatched(media_item);
+      bar1.increment();
+      return media_item;
+    });
 
   bar1.update(media_source.length);
   bar1.stop();
@@ -108,8 +129,8 @@ async function sync() {
   if (bidirectional) {
     // Repeat in the other direction.
     // Bidirectional sync should never sync unwatched status.
-    logger.message(`Syncing ${is_watched_only ? 'watched' : 'all'} media from destination to source.`, 'h3');
-    const bar2 = new ProgressBar(media_source.length);
+    logger.message(`Syncing ${is_all_media ? 'watched' : 'all'} media from destination to source.`, 'h3');
+    const bar2 = new ProgressBarCount(media_source.length);
     bar2.start();
     const media_dest = libraryInstances.dest.getWatchedMedia();
     await asyncForEach(media_dest, async media_item => {
@@ -125,6 +146,12 @@ async function sync() {
   }
 
   logger.success('All sync tasks complete.');
+}
+
+async function clean() {
+  let source, dest;
+  if (source = libraryInstances.source) await source._disconnect();
+  if (dest = libraryInstances.dest) await dest._disconnect();
 }
 
 async function instantiateLibrary(config = {}, prompt = 'Which type of library?') {
@@ -169,9 +196,16 @@ function logArrayAsOptions(arr) {
 }
 
 export default async function run() {
+  try {
     await init();
     await configure();
     await sync();
+    await clean();
+  } catch (err) {
+    await clean();
+    throw err;
+  }
+
 }
 
 // Having trouble with async forEach.

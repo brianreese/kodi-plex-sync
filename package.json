@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/darkcody/kodi-plex-sync#readme",
   "dependencies": {
+    "@supercharge/promise-pool": "^1.2.0",
     "app-root-path": "^3.0.0",
     "ascii-art": "^2.5.0",
     "ascii-art-image": "^1.2.2",
@@ -38,7 +39,7 @@
     "plex-api": "^5.3.1",
     "plex-api-pinauth": "^0.1.0",
     "prompt": "git://github.com/flatiron/prompt.git#8d5495c84c3f433b8f26ea2798f8ba68c3656459",
-    "rc_cli_util": "git@github.com:darkcody/rc_cli_util.git#0.0.8",
+    "rc_cli_util": "git@github.com:darkcody/rc_cli_util.git#0.0.9",
     "yaml": "^1.8.3"
   }
 }

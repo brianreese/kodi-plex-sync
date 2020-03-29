@@ -10,7 +10,7 @@ export default class MovieItem extends MediaItemBase {
   }
 
   _getOptionalProps() {
-    return super._getOptionalProps().concat(['year', 'id']);
+    return super._getOptionalProps().concat(['year', 'id', 'movieid']);
   }
 
   _getCompoundMatchProps() {

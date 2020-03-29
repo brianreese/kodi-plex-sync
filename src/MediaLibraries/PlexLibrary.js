@@ -159,28 +159,11 @@ export class PlexLibrary extends MediaLibraryBase {
 
   }
 
-  async _setWatched(item) {
-    const matches = this.getMatchingMediaItem(item);
-    const promises = matches.map(async matched => {
-      // if (matched.playcount <= 1) {
-
-        const promise = this._queryUri(`/:/scrobble?identifier=com.plexapp.plugins.library&key=${matched.id}`);
-        // debugger;
-        return promise;
-      // }
-      // return;
-    });
-    await Promise.all(promises);
+  async _sendWatched(item) {
+    await this._queryUri(`/:/scrobble?identifier=com.plexapp.plugins.library&key=${item.id}`);
   }
 
-  async _setUnatched(item) {
-    this.getMatchingMediaItem(item).forEach(matched => {
-      if (!matched.playcount) {
-        return Promise.resolve();
-      }
-
-      return this._queryUri(`/:/unscrobble?identifier=com.plexapp.plugins.library&key=${matched.id}`);
-    });
+  async _sendUnwatched(item) {
+    await this._queryUri(`/:/unscrobble?identifier=com.plexapp.plugins.library&key=${item.id}`);
   }
-
 }

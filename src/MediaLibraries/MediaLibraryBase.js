@@ -32,7 +32,7 @@ export default class MediaLibraryBase {
       this.error = true;
       this.emitter.emit('error');
     }).finally(() => {
-      this._disconnect();
+      // this._disconnect();
     });
   }
 
@@ -117,7 +117,7 @@ export default class MediaLibraryBase {
    *   An array of media items.
    */
   getWatchedMedia() {
-    return this.getAllMedia().filter(it => it.playcount);
+    return this.getAllMedia().filter(it => it.playcount >= 1 );
   }
 
   /**
@@ -167,8 +167,16 @@ export default class MediaLibraryBase {
    *
    * @private
    */
-  _setWatched(item) {
-    throw new Error(`Classes extending ${MediaLibraryBase.constructor} must implement setWatched().`);
+  async _setWatched(item, force = false) {
+    if (!item.playcount && !force) return;
+
+    const matches = this.getMatchingMediaItem(item);
+    const promises = matches.map(async matched => {
+      if (matched.playcount <= 1) {
+        await this._sendWatched(matched);
+      }
+    });
+    await Promise.all(promises);
   }
 
   /**
@@ -176,8 +184,24 @@ export default class MediaLibraryBase {
    *
    * @private
    */
-  _setUnwatched(item) {
-    throw new Error(`Classes extending ${MediaLibraryBase.constructor} must implement setWatched().`);
+  async _setUnwatched(item, force=false) {
+    if (item.playcount && !force) return;
+
+    const matches = this.getMatchingMediaItem(item);
+    const promises = matches.map(async matched => {
+      if (matched.playcount) {
+        await this._sendUnwatched(matched);
+      }
+    });
+    await Promise.all(promises);
+  }
+
+  async _sendWatched(item) {
+    throw new Error(`Classes extending ${MediaLibraryBase.constructor} must implement _sendWatched().`);
+  }
+
+  async _sendUnwatched(item) {
+    throw new Error(`Classes extending ${MediaLibraryBase.constructor} must implement _sendUnwatched().`);
   }
 
   /**

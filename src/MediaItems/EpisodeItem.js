@@ -13,7 +13,7 @@ export default class EpisodeItem extends MediaItemBase {
   _getOptionalProps() {
     return KodiEpisodeFields
       .filter(field => !this._getRequiredProps().includes(field))
-      .concat(['id'])
+      .concat(['id', 'episodeid'])
     ;
   }
 
