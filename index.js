@@ -1,5 +1,5 @@
-import libSync from './src/sync';
-import Registry from './src/MediaLibraries/Registry';
+import libSync from './lib/sync';
+import Registry from './lib/MediaLibraries/Registry';
 import prompt from 'prompt';
 import logger from 'rc_cli_util';
 
